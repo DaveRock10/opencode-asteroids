@@ -46,9 +46,16 @@ Luego visita `http://localhost:3000`.
 
 El power-up se dibuja como un rombo cian con un rayo, permanece 12 segundos en pantalla y el HUD muestra una barra que se vacía mientras el efecto está activo.
 
+## Estrella fugaz
+
+Cada 14–22 segundos (la primera a los ~12 s de empezar) aparece un aviso ámbar parpadeante en el HUD y en un punto del mapa. Tras 2.5 segundos de aviso entra una **estrella fugaz**: un asteroide grande de color ámbar con cola que se mueve 2.6 veces más rápido que uno normal y desaparece solo a los 8 segundos (se atenúa y parpadea antes de desvanecerse). Solo hay una a la vez.
+
+Si la destruyes puntúa como un asteroide grande (20 puntos) y se parte en dos medianos; si la dejas escapar, se desvanece sin puntos. Limpiar los asteroides normales avanza de nivel aunque quede una estrella viva.
+
 ## Características
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
 - Power-up Velocidad con barra de tiempo restante en el HUD
+- Estrella fugaz periódica con aviso previo, velocidad x2.6 y desaparición temporizada

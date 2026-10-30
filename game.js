@@ -80,19 +80,31 @@ const RADII  = [0, 16, 30, 50];   // por tamaño 1, 2, 3
 const SPEEDS = [0, 85, 55, 32];   // velocidad base por tamaño
 const POINTS = [0, 100, 50, 20];  // puntos por tamaño
 
+// ── Estrella fugaz ────────────────────────────────────────────────────────────
+const STAR_TTL   = 8;     // segundos que vive la estrella
+const STAR_SPEED = 2.6;   // multiplicador sobre SPEEDS[size]
+const STAR_FIRST = 12;    // primera aparición desde el inicio del nivel
+const STAR_MIN   = 14;    // espera mínima entre apariciones
+const STAR_MAX   = 22;    // espera máxima
+const STAR_WARN  = 2.5;   // duración del aviso previo
+const STAR_SAFE  = 180;   // distancia mínima de aparición respecto a la nave
+const STAR_COLOR = '255,209,102';
+
 class Asteroid {
-  constructor(x, y, size = 3) {
+  constructor(x, y, size = 3, fugaz = false) {
     this.x    = x;
     this.y    = y;
     this.size = size;
+    this.fugaz = fugaz;
+    this.ttl  = fugaz ? STAR_TTL : Infinity;
     this.radius = RADII[size];
     this.dead = false;
 
     const angle = rand(0, Math.PI * 2);
-    const speed = SPEEDS[size] + rand(-15, 15);
+    const speed = SPEEDS[size] * (fugaz ? STAR_SPEED : 1) + rand(-15, 15);
     this.vx = Math.cos(angle) * speed;
     this.vy = Math.sin(angle) * speed;
-    this.rotSpeed = rand(-1.2, 1.2);
+    this.rotSpeed = fugaz ? rand(-2.4, 2.4) : rand(-1.2, 1.2);
     this.rot = rand(0, Math.PI * 2);
 
     // Polígono irregular
@@ -109,6 +121,14 @@ class Asteroid {
     this.x   = wrap(this.x + this.vx * dt, W);
     this.y   = wrap(this.y + this.vy * dt, H);
     this.rot += this.rotSpeed * dt;
+
+    if (this.fugaz) {
+      this.ttl -= dt;
+      if (this.ttl <= 0) {
+        this.dead = true;
+        explode(this.x, this.y, 6, STAR_COLOR);
+      }
+    }
   }
 
   split() {
@@ -120,10 +140,24 @@ class Asteroid {
   }
 
   draw() {
+    // Cola de la estrella fugaz, en coordenadas de mundo
+    if (this.fugaz) {
+      const speed = Math.hypot(this.vx, this.vy) || 1;
+      ctx.strokeStyle = `rgba(${STAR_COLOR},0.35)`;
+      ctx.lineWidth   = 2;
+      ctx.beginPath();
+      ctx.moveTo(this.x - (this.vx / speed) * 26, this.y - (this.vy / speed) * 26);
+      ctx.lineTo(this.x, this.y);
+      ctx.stroke();
+    }
+
+    if (this.fugaz && this.ttl < 1.5 && Math.floor(this.ttl * 8) % 2 === 0) return;
+
     ctx.save();
+    if (this.fugaz) ctx.globalAlpha = Math.min(1, Math.max(0, this.ttl / 2));
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = this.fugaz ? '#ffd166' : '#fff';
     ctx.lineWidth   = 1.5;
     ctx.lineJoin    = 'round';
     ctx.beginPath();
@@ -327,16 +361,31 @@ let ship, bullets, asteroids, particles, powerUps;
 let score, lives, level;
 let state;      // 'playing' | 'dead' | 'gameover'
 let deadTimer;
+let starTimer;  // cuenta atrás hasta el siguiente aviso
+let starWarn;   // { x, y, t } durante el aviso, o null
+
+function randomSpawnPoint() {
+  const SAFE_DIST = 130;
+  let x, y;
+  do {
+    x = rand(0, W);
+    y = rand(0, H);
+  } while (Math.hypot(x - W / 2, y - H / 2) < SAFE_DIST);
+  return { x, y };
+}
+
+function randomStarSpawn() {
+  let p;
+  do {
+    p = randomSpawnPoint();
+  } while (wrappedDist(p, ship) < STAR_SAFE);
+  return p;
+}
 
 function spawnAsteroids(count) {
-  const SAFE_DIST = 130;
   for (let i = 0; i < count; i++) {
-    let x, y;
-    do {
-      x = rand(0, W);
-      y = rand(0, H);
-    } while (Math.hypot(x - W / 2, y - H / 2) < SAFE_DIST);
-    asteroids.push(new Asteroid(x, y, 3));
+    const p = randomSpawnPoint();
+    asteroids.push(new Asteroid(p.x, p.y, 3));
   }
 }
 
@@ -350,6 +399,8 @@ function initGame() {
   lives  = 3;
   level  = 1;
   state  = 'playing';
+  starTimer = STAR_FIRST;
+  starWarn  = null;
   spawnAsteroids(4);
 }
 
@@ -359,11 +410,34 @@ function nextLevel() {
   particles = [];
   powerUps  = [];
   ship.reset();
+  starTimer = rand(STAR_MIN, STAR_MAX);
+  starWarn  = null;
   spawnAsteroids(3 + level);
 }
 
 function explode(x, y, count = 8, color = '255,255,255') {
   for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
+}
+
+function updateStar(dt) {
+  // Solo una estrella fugaz a la vez
+  if (asteroids.some(a => a.fugaz)) return;
+
+  if (starWarn) {
+    starWarn.t -= dt;
+    if (starWarn.t <= 0) {
+      asteroids.push(new Asteroid(starWarn.x, starWarn.y, 3, true));
+      starWarn  = null;
+      starTimer = rand(STAR_MIN, STAR_MAX);
+    }
+    return;
+  }
+
+  starTimer -= dt;
+  if (starTimer <= 0) {
+    const p = randomStarSpawn();
+    starWarn = { x: p.x, y: p.y, t: STAR_WARN };
+  }
 }
 
 function killShip() {
@@ -394,6 +468,7 @@ function update(dt) {
     particles.forEach(p => p.update(dt));
     particles = particles.filter(p => !p.dead);
     asteroids.forEach(a => a.update(dt));
+    asteroids = asteroids.filter(a => !a.dead);
     powerUps.forEach(p => p.update(dt));
     powerUps = powerUps.filter(p => !p.dead);
     if (deadTimer <= 0) { state = 'playing'; ship.reset(); }
@@ -406,6 +481,7 @@ function update(dt) {
   }
 
   ship.update(dt);
+  updateStar(dt);
   bullets.forEach(b => b.update(dt));
   asteroids.forEach(a => a.update(dt));
   particles.forEach(p => p.update(dt));
@@ -459,8 +535,8 @@ function update(dt) {
     }
   }
 
-  // Nivel completado
-  if (asteroids.length === 0) nextLevel();
+  // Nivel completado (la estrella fugaz no retrasa el avance)
+  if (!asteroids.some(a => !a.fugaz)) nextLevel();
 }
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
@@ -508,6 +584,12 @@ function drawHUD() {
     ctx.fillStyle = '#00e5ff';
     ctx.fillRect(x, y, SPEED_BAR_W * ratio, SPEED_BAR_H);
   }
+
+  if (starWarn) {
+    ctx.fillStyle = '#ffd166';
+    ctx.textAlign = 'center';
+    ctx.fillText('¡ESTRELLA FUGAZ!', W / 2, 48);
+  }
 }
 
 function drawOverlay(title, sub) {
@@ -520,11 +602,32 @@ function drawOverlay(title, sub) {
   ctx.fillText(sub, W / 2, H / 2 + 22);
 }
 
+function drawStarWarning() {
+  if (!starWarn) return;
+  if (Math.floor(starWarn.t * 6) % 2 === 0) return;
+
+  const pulse = 18 + Math.sin(starWarn.t * 8) * 5;
+
+  ctx.save();
+  ctx.strokeStyle = '#ffd166';
+  ctx.lineWidth   = 2;
+  ctx.beginPath();
+  ctx.arc(starWarn.x, starWarn.y, pulse, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.arc(starWarn.x, starWarn.y, pulse + 8, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function draw() {
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, W, H);
 
   particles.forEach(p => p.draw());
+  drawStarWarning();
   asteroids.forEach(a => a.draw());
   powerUps.forEach(p => p.draw());
   bullets.forEach(b => b.draw());
