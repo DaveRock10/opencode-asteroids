@@ -39,6 +39,8 @@ const wrappedDist = (a, b) => {
 // ── Power-up ──────────────────────────────────────────────────────────────────
 const SPEED_DURATION = 5;    // segundos
 const SPEED_MULT     = 2;    // multiplicador de propulsión y velocidad punta
+const SPEED_BAR_W    = 150;  // ancho máximo de la barra del HUD
+const SPEED_BAR_H    = 8;    // alto de la barra del HUD
 const MAX_SPEED      = 330;  // velocidad punta base (px/s)
 const POWERUP_RADIUS = 13;
 const POWERUP_TTL    = 12;   // segundos antes de desaparecer
@@ -493,9 +495,18 @@ function drawHUD() {
     drawLifeIcon(W - 16 - i * 22, 18);
 
   if (ship.speedTimer > 0) {
+    const x = 14, y = 53;
+    const ratio = Math.max(0, Math.min(1, ship.speedTimer / SPEED_DURATION));
+
     ctx.fillStyle = '#00e5ff';
     ctx.textAlign = 'left';
-    ctx.fillText(`VELOCIDAD x2  ${ship.speedTimer.toFixed(1)}s`, 14, 48);
+    ctx.fillText('VELOCIDAD x2', 14, 48);
+
+    // Pista de fondo + relleno que decrece
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.18)';
+    ctx.fillRect(x, y, SPEED_BAR_W, SPEED_BAR_H);
+    ctx.fillStyle = '#00e5ff';
+    ctx.fillRect(x, y, SPEED_BAR_W * ratio, SPEED_BAR_H);
   }
 }
 

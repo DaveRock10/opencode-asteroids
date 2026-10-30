@@ -44,11 +44,11 @@ Luego visita `http://localhost:3000`.
 | -------- | ------- | ------ |
 | Velocidad | Al destruir asteroides grandes o medianos (20 % de probabilidad) | Duplica la propulsión y la velocidad punta de la nave durante 5 segundos |
 
-El power-up se dibuja como un rombo cian con un rayo, permanece 12 segundos en pantalla y el HUD muestra una cuenta atrás mientras el efecto está activo.
+El power-up se dibuja como un rombo cian con un rayo, permanece 12 segundos en pantalla y el HUD muestra una barra que se vacía mientras el efecto está activo.
 
 ## Características
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
-- Power-up Velocidad con indicador de tiempo restante en el HUD
+- Power-up Velocidad con barra de tiempo restante en el HUD
