@@ -5,14 +5,14 @@
 Vanilla ES6 Asteroids clone: three static files, no build, no dependencies, no test/lint/typecheck tooling, no `package.json`.
 
 - `index.html` — page shell, canvas `800x600`, inline CSS, loads `game.js` with a classic `<script>` tag
-- `game.js` — the entire game (~420 lines): input, entities, state machine, update/draw, `requestAnimationFrame` loop
+- `game.js` — the entire game (~540 lines): input, entities, state machine, update/draw, `requestAnimationFrame` loop
 - `favicon.svg` — static icon
 
 ## Running and verifying
 
 - Open `index.html` directly, or serve it: `npx serve .` (README) then visit `http://localhost:3000`.
 - `python3 -m http.server 3000` also works. `node` is not reliably on PATH in this environment.
-- No automated verification exists. After changes, manually check: ship rotates/thrusts/shoots, asteroids split and score (large 20 → medium 50 → small 100), ship death costs a life and respawns, clearing all asteroids advances the level, and Game Over + Space restart works.
+- No automated verification exists. After changes, manually check: ship rotates/thrusts/shoots, asteroids split and score (large 20 → medium 50 → small 100), ship death costs a life and respawns, clearing all asteroids advances the level, and Game Over + Space restart works. Also check that large/medium asteroids can drop the Velocidad power-up, collecting it doubles thrust/top speed for 5 seconds, and the HUD countdown expires correctly.
 - Avoid refactoring into modules/bundler unless asked; the no-toolchain setup is intentional.
 
 ## Code conventions and gotchas
@@ -25,7 +25,8 @@ Vanilla ES6 Asteroids clone: three static files, no build, no dependencies, no t
 - Game state machine values: `'playing' | 'dead' | 'gameover'`. `update()` branches on `state`; `'dead'` freezes the ship but keeps asteroids/particles moving.
 - Asteroid size indices are `3` = large, `2` = medium, `1` = small; index `0` is an unused placeholder in `RADII`, `SPEEDS`, `POINTS`. Split stops at size 1.
 - Timestep `dt` is in seconds and clamped to `0.05` in `loop()`; all velocities/cooldowns use per-second units.
-- README mentions power-ups and a "shooting star" asteroid type that are **not implemented** in `game.js`; trust the code.
+- README documents the implemented features; trust `game.js` for behavior details.
+- Power-ups (`PowerUp`) drop only from large/medium asteroids and are collected with `wrappedDist()`, which accounts for toroidal wrapping; use it for edge-safe pickup checks.
 
 ## Git
 
