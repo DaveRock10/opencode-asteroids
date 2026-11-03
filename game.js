@@ -170,6 +170,161 @@ class Asteroid {
   }
 }
 
+// ── Skins de la nave ─────────────────────────────────────────────────────────
+// Formas en coordenadas locales: nariz en +X, simétricas respecto a Y.
+// Todas caben en un área similar para no alterar el hitbox de la nave.
+const SKIN_KEY = 'asteroids.skin';
+
+const SKINS = [
+  {
+    nombre: 'CLÁSICA',
+    color: '#ffffff',
+    boost: '#00e5ff',
+    llama: '255,130,0',
+    llamaBoost: '0,229,255',
+    forma: [[20, 0], [-12, -9], [-7, 0], [-12, 9]],
+    detalles: [],
+    llamas: [[-8, 0]],
+    glow: 0,
+    alpha: 1,
+    linea: 1.5,
+  },
+  {
+    nombre: 'NEÓN',
+    color: '#00e5ff',
+    boost: '#aef8ff',
+    llama: '0,229,255',
+    llamaBoost: '174,248,255',
+    forma: [[22, 0], [2, -8], [-12, -11], [-7, 0], [-12, 11], [2, 8]],
+    detalles: [[[10, 0], [0, -4], [-6, 0], [0, 4], [10, 0]]],
+    llamas: [[-8, 0]],
+    glow: 14,
+    alpha: 1,
+    linea: 1.4,
+  },
+  {
+    nombre: 'CAZA',
+    color: '#7cff6b',
+    boost: '#d4ffca',
+    llama: '124,255,107',
+    llamaBoost: '212,255,202',
+    forma: [[20, 0], [6, -4], [4, -12], [-2, -12], [-4, -4], [-12, -9], [-10, -2],
+            [-16, 0], [-10, 2], [-12, 9], [-4, 4], [-2, 12], [4, 12], [6, 4]],
+    detalles: [[[10, 0], [2, 0]], [[4, -10], [0, -4]], [[4, 10], [0, 4]]],
+    llamas: [[-7, -6], [-7, 6]],
+    glow: 0,
+    alpha: 1,
+    linea: 1.4,
+  },
+  {
+    nombre: 'FANTASMA',
+    color: '#c792ff',
+    boost: '#f0e0ff',
+    llama: '199,146,255',
+    llamaBoost: '240,224,255',
+    forma: [[18, 0], [13, -5], [6, -9], [-4, -9], [-12, -5], [-9, 0], [-12, 5], [-4, 9], [6, 9], [13, 5]],
+    detalles: [],
+    llamas: [[-8, 0]],
+    glow: 10,
+    alpha: 0.6,
+    linea: 1.4,
+  },
+  {
+    nombre: 'HALCÓN',
+    color: '#ffd166',
+    boost: '#fff0c2',
+    llama: '255,160,60',
+    llamaBoost: '255,240,194',
+    forma: [[22, 0], [7, -3], [-1, -11], [-12, -12], [-8, -4], [-14, 0], [-8, 4], [-12, 12], [-1, 11], [7, 3]],
+    detalles: [[[8, 0], [-4, 0]], [[2, -6], [-6, -9]], [[2, 6], [-6, 9]]],
+    llamas: [[-9, 0]],
+    glow: 0,
+    alpha: 1,
+    linea: 1.5,
+  },
+  {
+    nombre: 'TRIDENTE',
+    color: '#ff6bd6',
+    boost: '#ffd6f5',
+    llama: '255,107,214',
+    llamaBoost: '255,214,245',
+    forma: [[24, 0], [10, -4], [12, -11], [4, -11], [2, -4], [-6, -8], [-12, -7],
+            [-10, -2], [-16, 0], [-10, 2], [-12, 7], [-6, 8], [2, 4], [4, 11],
+            [12, 11], [10, 4]],
+    detalles: [[[12, 0], [4, 0]]],
+    llamas: [[-9, 0]],
+    glow: 8,
+    alpha: 1,
+    linea: 1.4,
+  },
+];
+
+function cargarSkin() {
+  try {
+    const saved = parseInt(localStorage.getItem(SKIN_KEY), 10);
+    return Number.isInteger(saved) && saved >= 0 && saved < SKINS.length ? saved : 0;
+  } catch (e) {
+    return 0;   // almacenamiento no disponible (p. ej. file:// en algunos navegadores)
+  }
+}
+
+function guardarSkin() {
+  try {
+    localStorage.setItem(SKIN_KEY, String(skinIndex));
+  } catch (e) {
+    // sin persistencia: la skin sigue funcionando en memoria
+  }
+}
+
+let skinIndex = cargarSkin();
+let skinTimer = 0;
+
+const currentSkin = () => SKINS[skinIndex];
+
+function cambiarSkin(dir = 1) {
+  skinIndex = (skinIndex + dir + SKINS.length) % SKINS.length;
+  skinTimer = 2.2;
+  guardarSkin();
+}
+
+// Dibuja la silueta y los detalles de una skin. El contexto ya debe estar
+// trasladado/rotado; la escala se aplica a los vértices para no deformar el trazo.
+function dibujarSilueta(skin, escala, color, opciones = {}) {
+  const glow  = opciones.glow  ?? false;
+  const alpha = opciones.alpha ?? skin.alpha;
+  const grosor = opciones.grosor ?? skin.linea;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = grosor;
+  ctx.lineJoin    = 'round';
+  ctx.lineCap     = 'round';
+  ctx.globalAlpha = alpha;
+
+  if (glow && skin.glow > 0) {
+    ctx.shadowBlur  = skin.glow;
+    ctx.shadowColor = color;
+  }
+
+  const traza = (puntos) => {
+    ctx.beginPath();
+    ctx.moveTo(puntos[0][0] * escala, puntos[0][1] * escala);
+    for (let i = 1; i < puntos.length; i++)
+      ctx.lineTo(puntos[i][0] * escala, puntos[i][1] * escala);
+    ctx.closePath();
+    ctx.stroke();
+  };
+
+  traza(skin.forma);
+
+  for (const linea of skin.detalles) {
+    ctx.beginPath();
+    ctx.moveTo(linea[0][0] * escala, linea[0][1] * escala);
+    for (let i = 1; i < linea.length; i++)
+      ctx.lineTo(linea[i][0] * escala, linea[i][1] * escala);
+    ctx.stroke();
+  }
+}
+
 // ── Ship ──────────────────────────────────────────────────────────────────────
 class Ship {
   constructor() { this.reset(); }
@@ -237,30 +392,29 @@ class Ship {
     // Parpadeo durante invencibilidad de reaparición
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0) return;
 
+    const skin  = currentSkin();
+    const boost = this.speedTimer > 0;
+
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = this.speedTimer > 0 ? '#00e5ff' : '#fff';
-    ctx.lineWidth   = 1.5;
-    ctx.lineJoin    = 'round';
 
-    // Silueta clásica: triángulo con muesca trasera
-    ctx.beginPath();
-    ctx.moveTo( 20,  0);   // nariz
-    ctx.lineTo(-12, -9);   // ala izquierda
-    ctx.lineTo( -7,  0);   // muesca trasera
-    ctx.lineTo(-12,  9);   // ala derecha
-    ctx.closePath();
-    ctx.stroke();
+    dibujarSilueta(skin, 1, boost ? skin.boost : skin.color, { glow: true });
 
-    // Llama del propulsor
+    // Llama del propulsor (una o varias según la skin)
     if (this.thrusting && Math.random() > 0.35) {
-      const boost = this.speedTimer > 0;
+      const llama = boost ? skin.llamaBoost : skin.llama;
+      ctx.strokeStyle = `rgba(${llama}, 0.85)`;
+      ctx.lineWidth   = 1.5;
+      ctx.shadowBlur  = 0;
+      ctx.globalAlpha = skin.alpha;
       ctx.beginPath();
-      ctx.moveTo(-8, -4);
-      ctx.lineTo(-8 - (boost ? rand(10, 20) : rand(6, 14)), 0);
-      ctx.lineTo(-8,  4);
-      ctx.strokeStyle = boost ? 'rgba(0, 229, 255, 0.85)' : 'rgba(255, 130, 0, 0.85)';
+      for (const [fx, fy] of skin.llamas) {
+        const largo = boost ? rand(10, 20) : rand(6, 14);
+        ctx.moveTo(fx, fy - 4);
+        ctx.lineTo(fx - largo, fy);
+        ctx.lineTo(fx, fy + 4);
+      }
       ctx.stroke();
     }
 
@@ -456,6 +610,9 @@ function killShip() {
 
 // ── Update ────────────────────────────────────────────────────────────────────
 function update(dt) {
+  if (skinTimer > 0) skinTimer -= dt;
+  if (pressed('KeyS')) cambiarSkin(1);
+
   if (state === 'gameover') {
     if (pressed('Space')) initGame();
     particles.forEach(p => p.update(dt));
@@ -541,19 +698,14 @@ function update(dt) {
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
 function drawLifeIcon(x, y) {
+  const skin = currentSkin();
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(-Math.PI / 2);
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth   = 1.2;
-  ctx.lineJoin    = 'round';
-  ctx.beginPath();
-  ctx.moveTo( 9,  0);
-  ctx.lineTo(-6, -5);
-  ctx.lineTo(-3,  0);
-  ctx.lineTo(-6,  5);
-  ctx.closePath();
-  ctx.stroke();
+  dibujarSilueta(skin, 0.45, skin.color, {
+    alpha: Math.max(0.8, skin.alpha),
+    grosor: 1.2,
+  });
   ctx.restore();
 }
 
@@ -590,6 +742,14 @@ function drawHUD() {
     ctx.textAlign = 'center';
     ctx.fillText('¡ESTRELLA FUGAZ!', W / 2, 48);
   }
+
+  // Indicador de skin (se resalta durante unos segundos al cambiarla)
+  const skin  = currentSkin();
+  const activo = skinTimer > 0;
+  ctx.font      = activo ? 'bold 13px monospace' : '12px monospace';
+  ctx.fillStyle = activo ? skin.color : 'rgba(255,255,255,0.4)';
+  ctx.textAlign = 'left';
+  ctx.fillText(`SKIN ${skinIndex + 1}/${SKINS.length}: ${skin.nombre}  [S]`, 14, H - 15);
 }
 
 function drawOverlay(title, sub) {

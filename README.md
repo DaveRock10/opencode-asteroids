@@ -29,6 +29,7 @@ Luego visita `http://localhost:3000`.
 | `←` `→`   | Rotar nave |
 | `↑`       | Propulsar  |
 | `Espacio` | Disparar   |
+| `S`       | Cambiar skin de la nave |
 
 ## Puntuación
 
@@ -46,6 +47,21 @@ Luego visita `http://localhost:3000`.
 
 El power-up se dibuja como un rombo cian con un rayo, permanece 12 segundos en pantalla y el HUD muestra una barra que se vacía mientras el efecto está activo.
 
+## Skins
+
+La apariencia de la nave es solo cosmética: no modifica el hitbox, la física ni el disparo. Pulsa `S` en cualquier momento (también durante la muerte o en Game Over) para ciclar entre estas 6 skins:
+
+| Skin      | Estilo                                   |
+| --------- | ---------------------------------------- |
+| Clásica   | Silueta blanca original                  |
+| Neón      | Trazo cian con brillo                    |
+| Caza      | Silueta ancha con cabina y alas          |
+| Fantasma  | Trazo violeta translúcido                |
+| Halcón    | Alas barridas en ámbar                   |
+| Tridente  | Morro triple en magenta                  |
+
+La skin activa se indica abajo a la izquierda del HUD, se resalta al cambiarla y se guarda en `localStorage`, por lo que se conserva al recargar la página. Los iconos de vidas usan la misma silueta y color.
+
 ## Estrella fugaz
 
 Cada 14–22 segundos (la primera a los ~12 s de empezar) aparece un aviso ámbar parpadeante en el HUD y en un punto del mapa. Tras 2.5 segundos de aviso entra una **estrella fugaz**: un asteroide grande de color ámbar con cola que se mueve 2.6 veces más rápido que uno normal y desaparece solo a los 8 segundos (se atenúa y parpadea antes de desvanecerse). Solo hay una a la vez.
@@ -59,3 +75,4 @@ Si la destruyes puntúa como un asteroide grande (20 puntos) y se parte en dos m
 - Partículas de explosión al destruir asteroides
 - Power-up Velocidad con barra de tiempo restante en el HUD
 - Estrella fugaz periódica con aviso previo, velocidad x2.6 y desaparición temporizada
+- 6 skins de nave seleccionables con `S` y persistentes entre sesiones

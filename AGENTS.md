@@ -12,7 +12,7 @@ Vanilla ES6 Asteroids clone: three static files, no build, no dependencies, no t
 
 - Open `index.html` directly, or serve it: `npx serve .` (README) then visit `http://localhost:3000`.
 - `python3 -m http.server 3000` also works. `node` is not reliably on PATH in this environment.
-- No automated verification exists. After changes, manually check: ship rotates/thrusts/shoots, asteroids split and score (large 20 → medium 50 → small 100), ship death costs a life and respawns, clearing all asteroids advances the level, and Game Over + Space restart works. Also check that large/medium asteroids can drop the Velocidad power-up, collecting it doubles thrust/top speed for 5 seconds, and the HUD countdown expires correctly.
+- No automated verification exists. After changes, manually check: ship rotates/thrusts/shoots, asteroids split and score (large 20 → medium 50 → small 100), ship death costs a life and respawns, clearing all asteroids advances the level, and Game Over + Space restart works. Also check that large/medium asteroids can drop the Velocidad power-up, collecting it doubles thrust/top speed for 5 seconds, and the HUD countdown expires correctly. Cycle skins with `S` in playing/dead/gameover, confirm the HUD label and life icons update, and reload to verify the selection persists.
 - Avoid refactoring into modules/bundler unless asked; the no-toolchain setup is intentional.
 
 ## Code conventions and gotchas
@@ -27,6 +27,7 @@ Vanilla ES6 Asteroids clone: three static files, no build, no dependencies, no t
 - Timestep `dt` is in seconds and clamped to `0.05` in `loop()`; all velocities/cooldowns use per-second units.
 - README documents the implemented features; trust `game.js` for behavior details.
 - Power-ups (`PowerUp`) drop only from large/medium asteroids and are collected with `wrappedDist()`, which accounts for toroidal wrapping; use it for edge-safe pickup checks.
+- Ship skins live in the `SKINS` array and `skinIndex`; they are cosmetic only and must not change `radius`/`NOSE`. `S` cycles them (persisted in `localStorage` under `asteroids.skin`), and `dibujarSilueta()` draws both the ship and the HUD life icons.
 
 ## Git
 
