@@ -4,7 +4,11 @@ Clon del clásico arcade **Asteroids** implementado en canvas HTML5 puro, sin de
 
 ## Descripción
 
+<<<<<<< HEAD
 Nave espacial en un campo de asteroides con envolvimiento de bordes (el espacio es toroidal). Destruye asteroides para sumar puntos: los grandes se parten en medianos, los medianos en pequeños. Incluye los power-ups **Velocidad** y **Triple Disparo**, que aparecen al destruir asteroides grandes o medianos.
+=======
+Nave espacial en un campo de asteroides con envolvimiento de bordes (el espacio es toroidal). Destruye asteroides para sumar puntos: los grandes se parten en medianos, los medianos en pequeños. Incluye los power-ups **Velocidad**, que aumenta temporalmente la propulsión, y **Escudo**, que protege de una colisión con asteroide.
+>>>>>>> 03-shield
 
 ## Tecnologías
 
@@ -43,6 +47,7 @@ Luego visita `http://localhost:3000`.
 
 | Power-up | Aparece | Efecto |
 | -------- | ------- | ------ |
+<<<<<<< HEAD
 | Velocidad | Al destruir asteroides grandes o medianos (20 % de probabilidad) | Duplica la propulsión y la velocidad punta de la nave durante 5 segundos |
 | Triple Disparo | Al destruir asteroides grandes o medianos (20 % de probabilidad independiente de Velocidad) | Dispara 3 balas en abanico (±12°) durante 5 segundos |
 
@@ -62,6 +67,12 @@ La apariencia de la nave es solo cosmética: no modifica el hitbox, la física n
 | Tridente  | Morro triple en magenta                  |
 
 La skin activa se indica abajo a la izquierda del HUD, se resalta al cambiarla y se guarda en `localStorage`, por lo que se conserva al recargar la página. Los iconos de vidas usan la misma silueta y color.
+=======
+| Velocidad | Al destruir asteroides grandes o medianos (20 % de probabilidad, reparto 50/50 con Escudo) | Duplica la propulsión y la velocidad punta de la nave durante 5 segundos |
+| Escudo | Al destruir asteroides grandes o medianos (20 % de probabilidad, reparto 50/50 con Velocidad) | Protege de una colisión con asteroide (o estrella fugaz) durante 8 segundos o hasta absorber un impacto |
+
+Los power-ups se dibujan como un rombo cian con un rayo (Velocidad) o un hexágono verde (Escudo), permanecen 12 segundos en pantalla y el HUD muestra una barra que se vacía mientras el efecto está activo. Al absorber un impacto, el escudo destruye el asteroide sin otorgar puntos y desaparece; la nave queda invencible medio segundo para evitar un segundo choque encadenado.
+>>>>>>> 03-shield
 
 ## Estrella fugaz
 
@@ -75,6 +86,10 @@ Si la destruyes puntúa como un asteroide grande (20 puntos) y se parte en dos m
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
 - Power-up Velocidad con barra de tiempo restante en el HUD
+<<<<<<< HEAD
 - Power-up Triple Disparo (3 balas en abanico) con su propia barra en el HUD
+=======
+- Power-up Escudo que absorbe una colisión con asteroide o estrella fugaz, también con barra en el HUD
+>>>>>>> 03-shield
 - Estrella fugaz periódica con aviso previo, velocidad x2.6 y desaparición temporizada
 - 6 skins de nave seleccionables con `S` y persistentes entre sesiones
