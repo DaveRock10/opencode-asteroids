@@ -37,15 +37,20 @@ const wrappedDist = (a, b) => {
 };
 
 // ── Power-up ──────────────────────────────────────────────────────────────────
-const SPEED_DURATION = 5;    // segundos
-const SPEED_MULT     = 2;    // multiplicador de propulsión y velocidad punta
-const SPEED_BAR_W    = 150;  // ancho máximo de la barra del HUD
-const SPEED_BAR_H    = 8;    // alto de la barra del HUD
-const MAX_SPEED      = 330;  // velocidad punta base (px/s)
-const POWERUP_RADIUS = 13;
-const POWERUP_TTL    = 12;   // segundos antes de desaparecer
-const DROP_CHANCE    = 0.2;  // probabilidad al destruir un asteroide grande/mediano
-const MAX_POWERUPS   = 3;
+const SPEED_DURATION     = 5;     // segundos
+const SPEED_MULT         = 2;     // multiplicador de propulsión y velocidad punta
+const TRIPLE_DURATION    = 5;     // segundos de triple disparo
+const TRIPLE_SPREAD      = 0.21;  // ~12° de apertura a cada lado del centro
+const TRIPLE_DROP_CHANCE = 0.2;   // probabilidad independiente de la de Velocidad
+const POWER_BAR_W        = 150;   // ancho máximo de las barras del HUD
+const POWER_BAR_H        = 8;     // alto de las barras del HUD
+const MAX_SPEED          = 330;   // velocidad punta base (px/s)
+const POWERUP_RADIUS     = 13;
+const POWERUP_TTL        = 12;    // segundos antes de desaparecer
+const DROP_CHANCE        = 0.2;   // probabilidad al destruir un asteroide grande/mediano
+const MAX_POWERUPS       = 3;
+const SPEED_COLOR        = '0,229,255';
+const TRIPLE_COLOR       = '255,79,216';
 
 // ── Bullet ────────────────────────────────────────────────────────────────────
 class Bullet {
@@ -185,6 +190,7 @@ class Ship {
     this.invincible    = 3;
     this.shootCooldown = 0;
     this.speedTimer    = 0;
+    this.tripleTimer   = 0;
     this.dead          = false;
   }
 
@@ -193,6 +199,7 @@ class Ship {
     if (this.invincible    > 0) this.invincible    -= dt;
     if (this.shootCooldown > 0) this.shootCooldown -= dt;
     if (this.speedTimer    > 0) this.speedTimer    -= dt;
+    if (this.tripleTimer   > 0) this.tripleTimer   -= dt;
 
     const boost  = this.speedTimer > 0 ? SPEED_MULT : 1;
     const ROT    = 3.5;          // rad/s
@@ -229,6 +236,13 @@ class Ship {
     const NOSE = 21;
     const ox = this.x + Math.cos(this.angle) * NOSE;
     const oy = this.y + Math.sin(this.angle) * NOSE;
+    if (this.tripleTimer > 0) {
+      return [
+        new Bullet(ox, oy, this.angle - TRIPLE_SPREAD),
+        new Bullet(ox, oy, this.angle),
+        new Bullet(ox, oy, this.angle + TRIPLE_SPREAD),
+      ];
+    }
     return [new Bullet(ox, oy, this.angle)];
   }
 
@@ -240,7 +254,9 @@ class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = this.speedTimer > 0 ? '#00e5ff' : '#fff';
+    ctx.strokeStyle = this.speedTimer > 0 ? '#00e5ff'
+                    : this.tripleTimer > 0 ? '#ff4fd8'
+                    : '#fff';
     ctx.lineWidth   = 1.5;
     ctx.lineJoin    = 'round';
 
@@ -260,7 +276,9 @@ class Ship {
       ctx.moveTo(-8, -4);
       ctx.lineTo(-8 - (boost ? rand(10, 20) : rand(6, 14)), 0);
       ctx.lineTo(-8,  4);
-      ctx.strokeStyle = boost ? 'rgba(0, 229, 255, 0.85)' : 'rgba(255, 130, 0, 0.85)';
+      ctx.strokeStyle = this.speedTimer > 0 ? 'rgba(0, 229, 255, 0.85)'
+                      : this.tripleTimer > 0 ? 'rgba(255, 79, 216, 0.85)'
+                      : 'rgba(255, 130, 0, 0.85)';
       ctx.stroke();
     }
 
@@ -301,11 +319,12 @@ class Particle {
   }
 }
 
-// ── Power-up (Velocidad) ──────────────────────────────────────────────────────
+// ── Power-up (Velocidad / Triple disparo) ─────────────────────────────────────
 class PowerUp {
-  constructor(x, y) {
+  constructor(x, y, type = 'speed') {
     this.x = x;
     this.y = y;
+    this.type   = type;
     this.radius = POWERUP_RADIUS;
     this.ttl    = POWERUP_TTL;
     this.pulse  = 0;
@@ -331,7 +350,7 @@ class PowerUp {
     ctx.translate(this.x, this.y);
     ctx.rotate(this.pulse * 1.5);
     ctx.scale(s, s);
-    ctx.strokeStyle = '#00e5ff';
+    ctx.strokeStyle = this.type === 'triple' ? '#ff4fd8' : '#00e5ff';
     ctx.lineWidth   = 2;
     ctx.lineJoin    = 'round';
 
@@ -344,13 +363,22 @@ class PowerUp {
     ctx.closePath();
     ctx.stroke();
 
-    // Rayo
-    ctx.beginPath();
-    ctx.moveTo(  2, -8);
-    ctx.lineTo( -4,  1);
-    ctx.lineTo(  1,  1);
-    ctx.lineTo( -2,  8);
-    ctx.stroke();
+    if (this.type === 'triple') {
+      // Tres disparos en abanico
+      ctx.beginPath();
+      ctx.moveTo(0,  6); ctx.lineTo(-6, -7);
+      ctx.moveTo(0,  6); ctx.lineTo( 0, -8);
+      ctx.moveTo(0,  6); ctx.lineTo( 6, -7);
+      ctx.stroke();
+    } else {
+      // Rayo
+      ctx.beginPath();
+      ctx.moveTo(  2, -8);
+      ctx.lineTo( -4,  1);
+      ctx.lineTo(  1,  1);
+      ctx.lineTo( -2,  8);
+      ctx.stroke();
+    }
 
     ctx.restore();
   }
@@ -443,7 +471,8 @@ function updateStar(dt) {
 function killShip() {
   explode(ship.x, ship.y, 14);
   ship.dead = true;
-  ship.speedTimer = 0;
+  ship.speedTimer  = 0;
+  ship.tripleTimer = 0;
   lives--;
   if (lives <= 0) {
     powerUps = [];
@@ -494,9 +523,14 @@ function update(dt) {
   // Nave vs power-up
   for (const p of powerUps) {
     if (wrappedDist(ship, p) < ship.radius + p.radius) {
-      ship.speedTimer = SPEED_DURATION;
+      if (p.type === 'triple') {
+        ship.tripleTimer = TRIPLE_DURATION;
+        explode(p.x, p.y, 10, TRIPLE_COLOR);
+      } else {
+        ship.speedTimer = SPEED_DURATION;
+        explode(p.x, p.y, 10, SPEED_COLOR);
+      }
       p.dead = true;
-      explode(p.x, p.y, 10, '0,229,255');
     }
   }
   powerUps = powerUps.filter(p => !p.dead);
@@ -511,11 +545,19 @@ function update(dt) {
         score += POINTS[a.size];
         explode(a.x, a.y, a.size * 5);
 
-        // Solo los asteroides grandes y medianos pueden soltar el power-up
-        if (a.size >= 2 && powerUps.length < MAX_POWERUPS && Math.random() < DROP_CHANCE) {
-          const px = Math.max(20, Math.min(W - 20, a.x + rand(-10, 10)));
-          const py = Math.max(20, Math.min(H - 20, a.y + rand(-10, 10)));
-          powerUps.push(new PowerUp(px, py));
+        // Solo los asteroides grandes y medianos sueltan power-ups.
+        // Velocidad y Triple disparo tienen tiradas independientes.
+        if (a.size >= 2) {
+          if (powerUps.length < MAX_POWERUPS && Math.random() < DROP_CHANCE) {
+            const px = Math.max(20, Math.min(W - 20, a.x + rand(-10, 10)));
+            const py = Math.max(20, Math.min(H - 20, a.y + rand(-10, 10)));
+            powerUps.push(new PowerUp(px, py, 'speed'));
+          }
+          if (powerUps.length < MAX_POWERUPS && Math.random() < TRIPLE_DROP_CHANCE) {
+            const px = Math.max(20, Math.min(W - 20, a.x + rand(-10, 10)));
+            const py = Math.max(20, Math.min(H - 20, a.y + rand(-10, 10)));
+            powerUps.push(new PowerUp(px, py, 'triple'));
+          }
         }
 
         newAsteroids.push(...a.split());
@@ -557,6 +599,20 @@ function drawLifeIcon(x, y) {
   ctx.restore();
 }
 
+function drawPowerBar(label, timer, duration, rgb, hex, y) {
+  const ratio = Math.max(0, Math.min(1, timer / duration));
+
+  ctx.fillStyle = hex;
+  ctx.textAlign = 'left';
+  ctx.fillText(label, 14, y - 5);
+
+  // Pista de fondo + relleno que decrece
+  ctx.fillStyle = `rgba(${rgb}, 0.18)`;
+  ctx.fillRect(14, y, POWER_BAR_W, POWER_BAR_H);
+  ctx.fillStyle = hex;
+  ctx.fillRect(14, y, POWER_BAR_W * ratio, POWER_BAR_H);
+}
+
 function drawHUD() {
   ctx.fillStyle = '#fff';
   ctx.font = '15px monospace';
@@ -570,20 +626,11 @@ function drawHUD() {
   for (let i = 0; i < lives; i++)
     drawLifeIcon(W - 16 - i * 22, 18);
 
-  if (ship.speedTimer > 0) {
-    const x = 14, y = 53;
-    const ratio = Math.max(0, Math.min(1, ship.speedTimer / SPEED_DURATION));
+  if (ship.speedTimer > 0)
+    drawPowerBar('VELOCIDAD x2', ship.speedTimer, SPEED_DURATION, SPEED_COLOR, '#00e5ff', 53);
 
-    ctx.fillStyle = '#00e5ff';
-    ctx.textAlign = 'left';
-    ctx.fillText('VELOCIDAD x2', 14, 48);
-
-    // Pista de fondo + relleno que decrece
-    ctx.fillStyle = 'rgba(0, 229, 255, 0.18)';
-    ctx.fillRect(x, y, SPEED_BAR_W, SPEED_BAR_H);
-    ctx.fillStyle = '#00e5ff';
-    ctx.fillRect(x, y, SPEED_BAR_W * ratio, SPEED_BAR_H);
-  }
+  if (ship.tripleTimer > 0)
+    drawPowerBar('TRIPLE DISPARO', ship.tripleTimer, TRIPLE_DURATION, TRIPLE_COLOR, '#ff4fd8', 79);
 
   if (starWarn) {
     ctx.fillStyle = '#ffd166';

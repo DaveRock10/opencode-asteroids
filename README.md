@@ -4,7 +4,7 @@ Clon del clásico arcade **Asteroids** implementado en canvas HTML5 puro, sin de
 
 ## Descripción
 
-Nave espacial en un campo de asteroides con envolvimiento de bordes (el espacio es toroidal). Destruye asteroides para sumar puntos: los grandes se parten en medianos, los medianos en pequeños. Incluye el power-up **Velocidad**, que aparece al destruir asteroides grandes o medianos.
+Nave espacial en un campo de asteroides con envolvimiento de bordes (el espacio es toroidal). Destruye asteroides para sumar puntos: los grandes se parten en medianos, los medianos en pequeños. Incluye los power-ups **Velocidad** y **Triple Disparo**, que aparecen al destruir asteroides grandes o medianos.
 
 ## Tecnologías
 
@@ -43,8 +43,9 @@ Luego visita `http://localhost:3000`.
 | Power-up | Aparece | Efecto |
 | -------- | ------- | ------ |
 | Velocidad | Al destruir asteroides grandes o medianos (20 % de probabilidad) | Duplica la propulsión y la velocidad punta de la nave durante 5 segundos |
+| Triple Disparo | Al destruir asteroides grandes o medianos (20 % de probabilidad independiente de Velocidad) | Dispara 3 balas en abanico (±12°) durante 5 segundos |
 
-El power-up se dibuja como un rombo cian con un rayo, permanece 12 segundos en pantalla y el HUD muestra una barra que se vacía mientras el efecto está activo.
+El power-up de Velocidad se dibuja como un rombo cian con un rayo y el de Triple Disparo como un rombo magenta con tres trazos en abanico. Ambos permanecen 12 segundos en pantalla, pueden estar activos a la vez y el HUD muestra una barra que se vacía mientras cada efecto está activo.
 
 ## Estrella fugaz
 
@@ -58,4 +59,5 @@ Si la destruyes puntúa como un asteroide grande (20 puntos) y se parte en dos m
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
 - Power-up Velocidad con barra de tiempo restante en el HUD
+- Power-up Triple Disparo (3 balas en abanico) con su propia barra en el HUD
 - Estrella fugaz periódica con aviso previo, velocidad x2.6 y desaparición temporizada
