@@ -4,7 +4,7 @@ Clon del clásico arcade **Asteroids** implementado en canvas HTML5 puro, sin de
 
 ## Descripción
 
-Nave espacial en un campo de asteroides con envolvimiento de bordes (el espacio es toroidal). Destruye asteroides para sumar puntos: los grandes se parten en medianos, los medianos en pequeños. Incluye el power-up **Velocidad**, que aparece al destruir asteroides grandes o medianos.
+Nave espacial en un campo de asteroides con envolvimiento de bordes (el espacio es toroidal). Destruye asteroides para sumar puntos: los grandes se parten en medianos, los medianos en pequeños. Incluye los power-ups **Velocidad**, que aumenta temporalmente la propulsión, y **Escudo**, que protege de una colisión con asteroide.
 
 ## Tecnologías
 
@@ -42,9 +42,10 @@ Luego visita `http://localhost:3000`.
 
 | Power-up | Aparece | Efecto |
 | -------- | ------- | ------ |
-| Velocidad | Al destruir asteroides grandes o medianos (20 % de probabilidad) | Duplica la propulsión y la velocidad punta de la nave durante 5 segundos |
+| Velocidad | Al destruir asteroides grandes o medianos (20 % de probabilidad, reparto 50/50 con Escudo) | Duplica la propulsión y la velocidad punta de la nave durante 5 segundos |
+| Escudo | Al destruir asteroides grandes o medianos (20 % de probabilidad, reparto 50/50 con Velocidad) | Protege de una colisión con asteroide (o estrella fugaz) durante 8 segundos o hasta absorber un impacto |
 
-El power-up se dibuja como un rombo cian con un rayo, permanece 12 segundos en pantalla y el HUD muestra una barra que se vacía mientras el efecto está activo.
+Los power-ups se dibujan como un rombo cian con un rayo (Velocidad) o un hexágono verde (Escudo), permanecen 12 segundos en pantalla y el HUD muestra una barra que se vacía mientras el efecto está activo. Al absorber un impacto, el escudo destruye el asteroide sin otorgar puntos y desaparece; la nave queda invencible medio segundo para evitar un segundo choque encadenado.
 
 ## Estrella fugaz
 
@@ -58,4 +59,5 @@ Si la destruyes puntúa como un asteroide grande (20 puntos) y se parte en dos m
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
 - Power-up Velocidad con barra de tiempo restante en el HUD
+- Power-up Escudo que absorbe una colisión con asteroide o estrella fugaz, también con barra en el HUD
 - Estrella fugaz periódica con aviso previo, velocidad x2.6 y desaparición temporizada
